@@ -39,8 +39,29 @@ class GistAdapter {
             }
         });
         
+        // Check if request was successful
+        if (!response.ok) {
+            console.error('GitHub API Error:', response.status, response.statusText);
+            const errorText = await response.text();
+            console.error('Error details:', errorText);
+            return null;
+        }
+        
         const gist = await response.json();
-        const content = gist.files[this.filename]?.content;
+        
+        // Check if gist has files
+        if (!gist.files) {
+            console.error('Gist response has no files:', gist);
+            return null;
+        }
+        
+        // Check if our file exists
+        if (!gist.files[this.filename]) {
+            console.error(`File "${this.filename}" not found in gist. Available files:`, Object.keys(gist.files));
+            return null;
+        }
+        
+        const content = gist.files[this.filename].content;
         
         return content ? JSON.parse(content) : null;
     }
