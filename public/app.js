@@ -5,10 +5,8 @@ let audioChunks = [];
 let recordedAudioBlob = null;
 let recordingTimeout;
 
-// Connect to server for real-time updates
 let socket = io();
 
-// When someone adds a new word, it appears for everyone
 socket.on('newWord', (newWord) => {
     words.push(newWord);
     if (words.length == 1 || currentIndex == words.length - 2) {
@@ -17,7 +15,6 @@ socket.on('newWord', (newWord) => {
     }
 });
 
-// When someone adds a comment, everyone sees it
 socket.on('newComment', (data) => {
     const word = words.find(w => w.id == data.wordId);
     if (word) {
@@ -28,21 +25,18 @@ socket.on('newComment', (data) => {
     }
 });
 
-// Start when page loads
 window.addEventListener('load', async () => {
     await loadWords();
     displayCurrentWord();
     setupEventListeners();
 });
 
-// Get words from server
 async function loadWords() {
     const response = await fetch('/getWords');
     const data = await response.json();
     words = data.words;
 }
 
-// Show current word
 function displayCurrentWord() {
     const wordDisplay = document.getElementById('wordDisplay');
     
@@ -72,7 +66,6 @@ function displayCurrentWord() {
         </div>
     `;
     
-    // Navigation buttons
     document.getElementById('prevBtn').addEventListener('click', () => {
         currentIndex = (currentIndex - 1 + words.length) % words.length;
         displayCurrentWord();
@@ -83,7 +76,6 @@ function displayCurrentWord() {
         displayCurrentWord();
     });
     
-    // Add speaker icon if there's audio
     if (word.audioUrl) {
         const audioIconDiv = document.createElement('div');
         audioIconDiv.className = 'audio-icon-container';
@@ -100,7 +92,6 @@ function displayCurrentWord() {
     displayComments(word.comments);
 }
 
-// Show comments
 function displayComments(comments) {
     const commentsDiv = document.getElementById('commentsDisplay');
     
@@ -118,14 +109,12 @@ function displayComments(comments) {
     });
 }
 
-// Setup buttons and forms
 function setupEventListeners() {
     const recordBtn = document.getElementById('recordBtn');
     const stopBtn = document.getElementById('stopBtn');
     const recordingStatus = document.getElementById('recordingStatus');
     const audioPlayback = document.getElementById('audioPlayback');
     
-    // Record button
     recordBtn.addEventListener('click', async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -139,13 +128,13 @@ function setupEventListeners() {
             recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             audioPlayback.src = URL.createObjectURL(recordedAudioBlob);
             audioPlayback.style.display = 'block';
-            recordingStatus.textContent = '✓ Recording saved!';
+            recordingStatus.textContent = 'Recording saved!';
         };
         
         mediaRecorder.start();
         recordBtn.style.display = 'none';
         stopBtn.style.display = 'inline-block';
-        recordingStatus.textContent = '🔴 Recording... (max 3 seconds)';
+        recordingStatus.textContent = 'Recording... (max 3 seconds)';
         
         recordingTimeout = setTimeout(() => {
             if (mediaRecorder.state == 'recording') stopRecording();
@@ -154,7 +143,6 @@ function setupEventListeners() {
     
     stopBtn.addEventListener('click', stopRecording);
     
-    // Add Word button
     const newWordModal = document.getElementById('newWordModal');
     document.getElementById('newWordBtn').addEventListener('click', () => {
         document.getElementById('newWordForm').reset();
@@ -171,7 +159,6 @@ function setupEventListeners() {
         newWordModal.style.display = 'none';
     });
     
-    // Submit word
     document.getElementById('newWordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -181,17 +168,18 @@ function setupEventListeners() {
         
         let audioUrl = null;
         
-        // Upload audio if exists
         if (recordedAudioBlob) {
             const formData = new FormData();
             formData.append('audio', recordedAudioBlob, 'pronunciation.webm');
             
             const response = await fetch('/uploadAudio', { method: 'POST', body: formData });
             const data = await response.json();
-            audioUrl = data.audioUrl;
+            
+            if (response.ok && data.audioUrl) {
+                audioUrl = data.audioUrl;
+            }
         }
         
-        // Send word to server
         await fetch('/newWord', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -208,7 +196,6 @@ function setupEventListeners() {
         submitBtn.textContent = 'Submit';
     });
     
-    // Comment button
     const commentModal = document.getElementById('commentModal');
     document.getElementById('addCommentBtn').addEventListener('click', () => {
         if (words.length == 0) return;
@@ -219,7 +206,6 @@ function setupEventListeners() {
         commentModal.style.display = 'none';
     });
     
-    // Submit comment
     document.getElementById('commentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -236,7 +222,6 @@ function setupEventListeners() {
         document.getElementById('commentForm').reset();
     });
     
-    // Close modals on outside click
     window.addEventListener('click', (event) => {
         if (event.target == newWordModal) newWordModal.style.display = 'none';
         if (event.target == commentModal) commentModal.style.display = 'none';
