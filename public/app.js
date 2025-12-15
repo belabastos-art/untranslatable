@@ -4,7 +4,6 @@ let mediaRecorder;
 let audioChunks = [];
 let recordedAudioBlob = null;
 let recordingTimeout;
-
 let socket = io();
 
 socket.on('newWord', (newWord) => {
@@ -55,11 +54,11 @@ function displayCurrentWord() {
     const word = words[currentIndex];
     
     wordDisplay.innerHTML = `
-        <div class="word-counter">( ${String(currentIndex + 1).padStart(2, '0')}/${String(words.length).padStart(2, '0')} )</div>
-        <div class="main-word">${word.word}</div>
-        <div class="language">${word.language}</div>
+        <div class="word-counter">( {String(currentIndex + 1).padStart(2, '0')}/{String(words.length).padStart(2, '0')} )</div>
+        <div class="main-word">{word.word}</div>
+        <div class="language">{word.language}</div>
         <div class="dotted-line"></div>
-        <div class="definition">${word.definition}</div>
+        <div class="definition">{word.definition}</div>
         <div class="navigation">
             <button id="prevBtn" class="nav-btn">&lt;</button>
             <button id="nextBtn" class="nav-btn">&gt;</button>
