@@ -14,6 +14,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+console.log('Cloudinary:', process.env.CLOUDINARY_CLOUD_NAME);
 // Setup file upload (1MB max)
 const upload = multer({ 
     storage: multer.memoryStorage(),
@@ -32,9 +33,9 @@ class GistAdapter {
 
     // Read data from Gist
     async read() {
-        const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+        const response = await fetch(`https://api.github.com/gists/{this.gistId}`, {
             headers: {
-                'Authorization': `token ${this.token}`,
+                'Authorization': `token {this.token}`,
                 'Accept': 'application/vnd.github.v3+json'
             }
         });
@@ -57,7 +58,7 @@ class GistAdapter {
         
         // Check if our file exists
         if (!gist.files[this.filename]) {
-            console.error(`File "${this.filename}" not found in gist. Available files:`, Object.keys(gist.files));
+            console.error(`File "{this.filename}" not found in gist. Available files:`, Object.keys(gist.files));
             return null;
         }
         
@@ -68,7 +69,7 @@ class GistAdapter {
 
     // Write data to Gist
     async write(data) {
-        await fetch(`https://api.github.com/gists/${this.gistId}`, {
+        await fetch(`https://api.github.com/gists/{this.gistId}`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `token ${this.token}`,
@@ -128,21 +129,20 @@ app.post('/uploadAudio', upload.single('audio'), async (request, response) => {
         return response.status(400).json({ error: 'No audio file' });
     }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-        {
+    try {
+        const b64 = request.file.buffer.toString('base64');
+        const dataURI = `data:{request.file.mimetype};base64,{b64}`;
+        
+        const result = await cloudinary.uploader.upload(dataURI, {
             resource_type: 'video',
-            folder: 'untranslatable',
-            format: 'mp3'
-        },
-        (error, result) => {
-            if (error) {
-                return response.status(500).json({ error: 'Upload failed' });
-            }
-            response.json({ audioUrl: result.secure_url });
-        }
-    );
-
-    uploadStream.end(request.file.buffer);
+            folder: 'untranslatable'
+        });
+        
+        response.json({ audioUrl: result.secure_url });
+    } catch (error) {
+        console.error('Cloudinary error:', error);
+        response.status(500).json({ error: 'Upload failed' });
+    }
 });
 
 // Add new word
