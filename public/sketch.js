@@ -1,5 +1,5 @@
-let particles = [];
-let numParticles = 30;
+let floatingdots = [];
+let numDots = 30;
 
 function setup() {
     let canvas = createCanvas(windowWidth, windowHeight);
@@ -7,8 +7,8 @@ function setup() {
     canvas.style('z-index', '-1');
     canvas.style('position', 'fixed');
     
-    // Create particles
-    for (let i = 0; i < numParticles; i++) {
+    // Create dots
+    for (let i = 0; i < numDots; i++) {
         particles.push({
             x: random(width),
             y: random(height),
@@ -22,24 +22,22 @@ function setup() {
 function draw() {
     background(244, 243, 242);
     
-    // Move and draw particles
-    for (let i = 0; i < particles.length; i++) {
-        let p = particles[i];
+    // Move and draw dots
+    for (let i = 0; i < dots.length; i++) {
+        let d = dots[i];
         
-        // Move particle
-        p.x += p.vx;
-        p.y += p.vy;
+        // Move dots
+        d.x += d.vx;
+        d.y += d.vy;
+        if (d.x < 0) d.x = width;
+        if (d.x > width) p.x = 0;
+        if (d.y < 0) d.y = height;
+        if (d.y > height) p.y = 0;
         
-        // Wrap around edges
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-        
-        // Draw particle
+        // Draw dots
         noStroke();
         fill(138, 196, 188, 120);
-        circle(p.x, p.y, p.size);
+        circle(d.x, d.y, d.size);
     }
 }
 
